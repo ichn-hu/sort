@@ -1,8 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"sort"
+	"strconv"
+	"strings"
+	"log"
 )
 
 type Config struct {
@@ -17,7 +21,7 @@ type ElType interface {
 	LessThan(*ElType) bool
 	IsEqualTo(*ElType) bool
 	Init()
-	ToStr() string
+	String() string
 }
 
 type Element struct {
@@ -40,9 +44,10 @@ func (lhs *Element) Init() {
 	lhs.data = rand.Int()
 }
 
-func (lhs *Element) ToStr() string {
-	return string(lhs.data)
+func (lhs *Element) String() string {
+	return string(strconv.Itoa(lhs.data))
 }
+
 
 func NewElement() ElType {
 	var e = &Element{}
@@ -64,7 +69,42 @@ func (a DataBlock) Less(i, j int) bool {
 	return a[i].LessThan(&a[j])
 }
 
+func (a DataBlock) Equals(b DataBlock) bool {
+	l := a.Len()
+	if l != b.Len() {
+		return false
+	}
+	for i := 0; i < l; i++ {
+		if !a[i].IsEqualTo(&b[i]) {
+			log.Print(i, a[i], b[i])
+			return false
+		}
+	}
+	return true
+}
+
+func (a DataBlock) String() string {
+	buf := new(strings.Builder)
+	fmt.Fprintf(buf, "[")
+	for _, e := range a {
+		fmt.Fprint(buf, e, ", ")
+	}
+	fmt.Fprint(buf, "]")
+	return buf.String()
+}
+
 type Partition []DataBlock
+
+func (p *Partition) Squash() DataBlock {
+	d := DataBlock{}
+	d = make([]ElType, 0)
+	for _, t := range *p {
+		for _, e := range t {
+			d = append(d, e)
+		}
+	}
+	return d
+}
 
 func Generate(c Config, new func() ElType) *[]Partition {
 	var parts []Partition

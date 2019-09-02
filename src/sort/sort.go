@@ -18,6 +18,9 @@ func SortBruteforce(parts *[]Partition) DataBlock {
 	return data
 }
 
+
+
+
 func main() {
 	var c = Config{
 		p:     3,

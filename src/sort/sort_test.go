@@ -62,3 +62,23 @@ func TestSortBruteforce(t *testing.T) {
 	d := SortBruteforce(Generate(c, NewElement))
 	fmt.Print(d)
 }
+
+func TestSortKWayMergeViaBinaryHeap(t *testing.T) {
+	round := 100
+	for r := 0; r < round; r++ {
+		c := Config{
+			p:     rand.Intn(100),
+			max_b: rand.Intn(100),
+			min_b: 0,
+			max_e: rand.Intn(100),
+			min_e: 0,
+		}
+		d := Generate(c, NewElement)
+		gold := SortBruteforce(d)
+		result := SortKWayMergeViaBinaryHeap(d)
+		if !gold.Equals(result) {
+			t.Fatal("GG", gold, result)
+		}
+	}
+}
+
