@@ -106,7 +106,7 @@ func (p *Partition) Squash() DataBlock {
 	return d
 }
 
-func Generate(c Config, new func() ElType) *[]Partition {
+func GenerateRandom(c Config, new func() ElType) *[]Partition {
 	var parts []Partition
 	parts = make([]Partition, c.p)
 
@@ -133,6 +133,24 @@ func Generate(c Config, new func() ElType) *[]Partition {
 			part = append(part, block)
 		}
 		parts = append(parts, part)
+	}
+	return &parts
+}
+
+func GenerateNonOverlapping(c Config, new func() ElType) *[]Partition {
+	var elements DataBlock
+	tot := c.p * c.max_b * c.max_e
+	elements = make([]ElType, tot)
+	for i := 0; i < tot; i++ {
+		elements[i] = new()
+	}
+	sort.Sort(elements)
+	var parts []Partition
+	parts = make([]Partition, c.p)
+	for i := 0; i < tot; i += c.max_e {
+		d := elements[i: i+c.max_e]
+		p := rand.Intn(c.p)
+		parts[p] = append(parts[p], d)
 	}
 	return &parts
 }

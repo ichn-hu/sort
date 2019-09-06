@@ -29,6 +29,6 @@ func main() {
 		max_e: 3,
 		min_e: 2,
 	}
-	var p = Generate(c, NewElement)
+	var p = GenerateRandom(c, NewElement)
 	fmt.Print(p)
 }
