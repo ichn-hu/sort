@@ -142,9 +142,8 @@ func GenerateNonOverlapping(c Config, new func() ElType) *[]Partition {
 	tot := c.p * c.max_b * c.max_e
 	elements = make([]ElType, tot)
 	for i := 0; i < tot; i++ {
-		elements[i] = new()
+		elements[i] = &Element{i}
 	}
-	sort.Sort(elements)
 	var parts []Partition
 	parts = make([]Partition, c.p)
 	for i := 0; i < tot; i += c.max_e {
@@ -153,11 +152,4 @@ func GenerateNonOverlapping(c Config, new func() ElType) *[]Partition {
 		parts[p] = append(parts[p], d)
 	}
 	return &parts
-}
-
-func (p *Partition) Sort(method string) {
-	switch method {
-	case "bruteforce":
-
-	}
 }

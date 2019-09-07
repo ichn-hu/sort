@@ -50,6 +50,14 @@ func TestGenerate(t *testing.T) {
 	}
 }
 
+func checkOrdered(d DataBlock, t *testing.T) {
+	for i := 1; i < d.Len(); i++ {
+		if !d[i - 1].LessThan(&d[i]) {
+			t.Fatal("Result not sorted")
+		}
+	}
+}
+
 func TestSortBruteforce(t *testing.T) {
 	c := Config{
 		p:     10,
@@ -58,7 +66,8 @@ func TestSortBruteforce(t *testing.T) {
 		max_e: 100,
 		min_e: 0,
 	}
-	_ = SortBruteforce(GenerateRandom(c, NewElement))
+	d := SortBruteforce(GenerateRandom(c, NewElement))
+	checkOrdered(d, t)
 }
 
 func TestSortKWayMergeViaBinaryHeap(t *testing.T) {
@@ -80,7 +89,7 @@ func TestSortKWayMergeViaBinaryHeap(t *testing.T) {
 	}
 }
 
-func TestSortKWayMergeViaLoserTree(t *testing.T) {
+func TestSortKWayMergeViaTournamentTree(t *testing.T) {
 	round := 1
 	for r := 0; r < round; r++ {
 		c := Config{
@@ -92,12 +101,54 @@ func TestSortKWayMergeViaLoserTree(t *testing.T) {
 		}
 		d := GenerateRandom(c, NewElement)
 		gold := SortBruteforce(d)
+		result := SortKWayMergeViaTournamentTree(d)
+		if !gold.Equals(result) {
+			t.Fatal("GG", gold, result)
+		}
+	}
+}
+
+func TestSortKWayMergeViaLoserTree(t *testing.T) {
+	round := 100
+	for r := 0; r < round; r++ {
+		c := Config{
+			p:     1000,
+			max_b: 30,
+			min_b: 30,
+			max_e: 30,
+			min_e: 30,
+		}
+		d := GenerateRandom(c, NewElement)
+		gold := SortBruteforce(d)
 		result := SortKWayMergeViaLoserTree(d)
 		if !gold.Equals(result) {
 			t.Fatal("GG", gold, result)
 		}
 	}
 }
+
+
+func benchmarkHeap(parts *[]Partition, b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = SortKWayMergeViaBinaryHeap(parts)
+	}
+}
+
+func benchmarkLoserTree(parts *[]Partition, b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = SortKWayMergeViaLoserTree(parts)
+	}
+}
+
+func benchmarkTournamentTree(parts *[]Partition, b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = SortKWayMergeViaLoserTree(parts)
+	}
+}
+
 
 func BenchmarkSortKWayMergeViaBinaryHeapRandomP10B1000E1000(b *testing.B) {
 	c := Config{
@@ -108,7 +159,7 @@ func BenchmarkSortKWayMergeViaBinaryHeapRandomP10B1000E1000(b *testing.B) {
 		min_e: 1000,
 	}
 	d := GenerateRandom(c, NewElement)
-	_ = SortKWayMergeViaBinaryHeap(d)
+	benchmarkHeap(d, b)
 }
 
 func BenchmarkSortKWayMergeViaBinaryHeapRandomP1000B100E100(b *testing.B) {
@@ -120,7 +171,7 @@ func BenchmarkSortKWayMergeViaBinaryHeapRandomP1000B100E100(b *testing.B) {
 		min_e: 100,
 	}
 	d := GenerateRandom(c, NewElement)
-	_ = SortKWayMergeViaBinaryHeap(d)
+	benchmarkHeap(d, b)
 }
 
 func BenchmarkSortKWayMergeViaBinaryHeapRandomP100000B10E10(b *testing.B) {
@@ -132,7 +183,7 @@ func BenchmarkSortKWayMergeViaBinaryHeapRandomP100000B10E10(b *testing.B) {
 		min_e: 10,
 	}
 	d := GenerateRandom(c, NewElement)
-	_ = SortKWayMergeViaBinaryHeap(d)
+	benchmarkHeap(d, b)
 }
 
 func BenchmarkSortKWayMergeViaBinaryHeapRandomP10000000B1E1(b *testing.B) {
@@ -144,7 +195,7 @@ func BenchmarkSortKWayMergeViaBinaryHeapRandomP10000000B1E1(b *testing.B) {
 		min_e: 1,
 	}
 	d := GenerateRandom(c, NewElement)
-	_ = SortKWayMergeViaBinaryHeap(d)
+	benchmarkHeap(d, b)
 }
 
 func BenchmarkSortKWayMergeViaLoserTreeRandomP10B1000E1000(b *testing.B) {
@@ -156,7 +207,7 @@ func BenchmarkSortKWayMergeViaLoserTreeRandomP10B1000E1000(b *testing.B) {
 		min_e: 1000,
 	}
 	d := GenerateRandom(c, NewElement)
-	_ = SortKWayMergeViaLoserTree(d)
+	benchmarkLoserTree(d, b)
 }
 
 func BenchmarkSortKWayMergeViaLoserTreeRandomP1000B100E100(b *testing.B) {
@@ -168,7 +219,7 @@ func BenchmarkSortKWayMergeViaLoserTreeRandomP1000B100E100(b *testing.B) {
 		min_e: 100,
 	}
 	d := GenerateRandom(c, NewElement)
-	_ = SortKWayMergeViaLoserTree(d)
+	benchmarkLoserTree(d, b)
 }
 
 func BenchmarkSortKWayMergeViaLoserTreeRandomP100000B10E10(b *testing.B) {
@@ -180,7 +231,7 @@ func BenchmarkSortKWayMergeViaLoserTreeRandomP100000B10E10(b *testing.B) {
 		min_e: 10,
 	}
 	d := GenerateRandom(c, NewElement)
-	_ = SortKWayMergeViaLoserTree(d)
+	benchmarkLoserTree(d, b)
 }
 
 func BenchmarkSortKWayMergeViaLoserTreeRandomP10000000B1E1(b *testing.B) {
@@ -192,7 +243,7 @@ func BenchmarkSortKWayMergeViaLoserTreeRandomP10000000B1E1(b *testing.B) {
 		min_e: 1,
 	}
 	d := GenerateRandom(c, NewElement)
-	_ = SortKWayMergeViaLoserTree(d)
+	benchmarkLoserTree(d, b)
 }
 
 func BenchmarkSortKWayMergeViaBinaryHeapNonOverlappingP10B1000E1000(b *testing.B) {
@@ -204,7 +255,7 @@ func BenchmarkSortKWayMergeViaBinaryHeapNonOverlappingP10B1000E1000(b *testing.B
 		min_e: 1000,
 	}
 	d := GenerateNonOverlapping(c, NewElement)
-	SortKWayMergeViaBinaryHeap(d)
+	benchmarkHeap(d, b)
 }
 
 func BenchmarkSortKWayMergeViaLoserTreeNonOverlappingP10B1000E1000(b *testing.B) {
@@ -216,7 +267,7 @@ func BenchmarkSortKWayMergeViaLoserTreeNonOverlappingP10B1000E1000(b *testing.B)
 		min_e: 1000,
 	}
 	d := GenerateNonOverlapping(c, NewElement)
-	SortKWayMergeViaLoserTree(d)
+	benchmarkLoserTree(d, b)
 }
 
 func BenchmarkSortKWayMergeViaBinaryHeapNonOverlappingP100000B10E10(b *testing.B) {
@@ -228,7 +279,7 @@ func BenchmarkSortKWayMergeViaBinaryHeapNonOverlappingP100000B10E10(b *testing.B
 		min_e: 10,
 	}
 	d := GenerateNonOverlapping(c, NewElement)
-	SortKWayMergeViaBinaryHeap(d)
+	benchmarkHeap(d, b)
 }
 
 func BenchmarkSortKWayMergeViaLoserTreeNonOverlappingP100000B10E10(b *testing.B) {
@@ -240,25 +291,29 @@ func BenchmarkSortKWayMergeViaLoserTreeNonOverlappingP100000B10E10(b *testing.B)
 		min_e: 10,
 	}
 	d := GenerateNonOverlapping(c, NewElement)
-	SortKWayMergeViaLoserTree(d)
+	benchmarkLoserTree(d, b)
 }
 
-/*
+func BenchmarkSortKWayMergeViaBinaryHeapNonOverlappingP1000000B10E10(b *testing.B) {
+	c := Config{
+		p:     1000000,
+		max_b: 10,
+		min_b: 10,
+		max_e: 10,
+		min_e: 10,
+	}
+	d := GenerateNonOverlapping(c, NewElement)
+	benchmarkHeap(d, b)
+}
 
-BenchmarkSortKWayMergeViaBinaryHeapRandomP10B1000E1000-8               1        13447202900 ns/op
-BenchmarkSortKWayMergeViaBinaryHeapRandomP1000B100E100-8               1        11210108595 ns/op
-BenchmarkSortKWayMergeViaBinaryHeapRandomP100000B10E10-8               1        37232284421 ns/op
-BenchmarkSortKWayMergeViaBinaryHeapRandomP10000000B1E1-8               1        77178133630 ns/op
-BenchmarkSortKWayMergeViaLoserTreeRandomP10B1000E1000-8                1        12377093275 ns/op
-BenchmarkSortKWayMergeViaLoserTreeRandomP1000B100E100-8                1        9653308611 ns/op
-BenchmarkSortKWayMergeViaLoserTreeRandomP100000B10E10-8                1        35112465734 ns/op
-BenchmarkSortKWayMergeViaLoserTreeRandomP10000000B1E1-8                1        61994628846 ns/op
-13447202900
-17719069552
-
-BenchmarkSortKWayMergeViaBinaryHeapNonOverlappingP10B1000E1000-8               1        17719069552 ns/op
-BenchmarkSortKWayMergeViaLoserTreeNonOverlappingP10B1000E1000-8                1        17658385611 ns/op
-
- */
-
-
+func BenchmarkSortKWayMergeViaLoserTreeNonOverlappingP1000000B10E10(b *testing.B) {
+	c := Config{
+		p:     1000000,
+		max_b: 10,
+		min_b: 10,
+		max_e: 10,
+		min_e: 10,
+	}
+	d := GenerateNonOverlapping(c, NewElement)
+	benchmarkLoserTree(d, b)
+}

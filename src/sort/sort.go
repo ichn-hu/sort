@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"sort"
 )
 
@@ -18,17 +17,3 @@ func SortBruteforce(parts *[]Partition) DataBlock {
 	return data
 }
 
-
-
-
-func main() {
-	var c = Config{
-		p:     3,
-		max_b: 3,
-		min_b: 2,
-		max_e: 3,
-		min_e: 2,
-	}
-	var p = GenerateRandom(c, NewElement)
-	fmt.Print(p)
-}
