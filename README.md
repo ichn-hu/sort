@@ -42,8 +42,48 @@ The algorithm runs in O(n log k) as well, since each update takes O(tree depth) 
 # Benchmark
 
 ```text
-
-
+(base)  ✘ ichn@ichn-arch-pc  ~/Projects/sort/src/sort   master ●✚  go test -bench=.
+goos: linux
+goarch: amd64
+BenchmarkSortKWayMergeViaBinaryHeapRandomP10B1000E1000-8                               1        3990439316 ns/op
+BenchmarkSortKWayMergeViaBinaryHeapRandomP1000B100E100-8                               1        4768437472 ns/op
+BenchmarkSortKWayMergeViaBinaryHeapRandomP100000B10E10-8                               1        17305088317 ns/op
+BenchmarkSortKWayMergeViaBinaryHeapRandomP10000000B1E1-8                               1        46030324661 ns/op
+BenchmarkSortKWayMergeViaTournamentTreeRandomP10B1000E1000-8                           1        3047975517 ns/op
+BenchmarkSortKWayMergeViaTournamentTreeRandomP1000B100E100-8                           1        4644232134 ns/op
+BenchmarkSortKWayMergeViaTournamentTreeRandomP100000B10E10-8                           1        16841555829 ns/op
+BenchmarkSortKWayMergeViaTournamentTreeRandomP10000000B1E1-8                           1        36817441663 ns/op
+BenchmarkSortKWayMergeViaBinaryHeapNonOverlappingP10B1000E1000-8                       1        1301352322 ns/op
+BenchmarkSortKWayMergeViaTournamentTreeNonOverlappingP10B1000E1000-8                   1        1164388819 ns/op
+BenchmarkSortKWayMergeViaBinaryHeapNonOverlappingP100000B10E10-8                       1        2816296290 ns/op
+BenchmarkSortKWayMergeViaTournamentTreeNonOverlappingP100000B10E10-8                   1        4599237971 ns/op
+BenchmarkSortKWayMergeViaBinaryHeapNonOverlappingP1000000B10E10-8                      1        49949588686 ns/op
+BenchmarkSortKWayMergeViaTournamentTreeNonOverlappingP1000000B10E10-8                  1        100163527913 ns/op
+PASS
+ok      _/home/ichn/Projects/sort/src/sort      352.203s
 ```
 
-# Profiling
+In the benchmark, P refers to the number of partitions, B means how many blocks will there be in each partition, and E 
+stands for number of elements in each data block.
+
+A exhaust benchmarking resulted in several observations. 
+
+* Tournament tree based method outperforms heap if data is generated randomly
+* If data blocks across partition are not overlapped, then heap performs better
+
+# Comparision
+
+Using tournament tree to maintain the minimal element could result in less memory access, since for each update, it only requires 1 comparision with a sibling node,
+while to maintain the heap, floating one node up or sink it down for one level requires 2 comparision, therefore overral using tournament tree could result in less running time.
+
+However, if the data blocks across different partition also don't overlap, then using heap will be more favorable, because for the update within a same data block,
+the minimal node won't sink in the heap, therefore each update only result in 2 comparisions. However for tournament tree it still need a bottom up update, which is O (log k) no matter how
+the data is structured. 
+
+# Conclusion
+
+If data across partitions also don't overlap, we could just sort the first element of each data block, and would result in a 
+algorithm the runs in O(P log B + n). However this problem turns out to be a totally different problem, and won't scale to situation where the non-overlapping guarantee does not exists.
+
+For simplicity and because of time limitation for the homework, I have not yet developed a hybrid algorithm that could solve the problem with or without the condition,
+but I still believe the heap solution is quite acceptable, for its elegance and scalability, and the tournament tree solution can be an alternative when there is no any prior knowledge in the distribution of data cross partitions.
